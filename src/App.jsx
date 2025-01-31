@@ -1,34 +1,47 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import Logo from './assets/KeeperApp.svg'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [notes, setNotes] = useState([]);
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className="flex justify-center py-5">
+        <img src={Logo} alt="KeeperApp logo" />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+      <h1 className="text-3xl text-center mb-[50px]">
+        Hello Aneroodh!
+      </h1>
+      <div className="px-[20%] m-4 flex-col justify-center">
+          <input
+            type="text"
+            className=" mx-auto flex items-center w-[50%] h-auto p-2 border rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          <textarea
+            className="w-full p-2 border rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Content"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+          />
+          <button
+            className=" mx-auto flex items-center justify-center w-[50%] bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition"
+          >
+            Add Note
+          </button>
+        </div>    
+        <div className="px-[20%] m-4 flex-col justify-center space-y-4">
+            <div className="bg-yellow-200 p-4 rounded-md shadow-md relative">
+            <h2 className="text-black font-semibold">{title}</h2>
+            <p className="text-gray-700">{content}</p>
+          </div>
+        </div>
+      </>
   )
 }
 
