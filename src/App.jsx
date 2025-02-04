@@ -1,11 +1,17 @@
-import { useState } from 'react'
-import Logo from './assets/KeeperApp.svg'
-import './App.css'
+import { useState } from "react";
+import Logo from "./assets/KeeperApp.svg";
+import "./styles.css";
 
 function App() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [notes, setNotes] = useState([]);
+  const [mode, setMode] = useState(false);
+  const [selectedNote, setSelectedNote] = useState(null); // Track selected note
+
+  const change = () => {
+    setMode(!mode);
+  };
 
   // Add a new note
   const handleAddNote = () => {
@@ -27,16 +33,18 @@ function App() {
     setNotes(notes.filter((note) => note.id !== id));
   };
 
-
   return (
-    <>
-      <div className="flex justify-center py-5">
-        <img src={Logo} alt="KeeperApp logo" />
-      </div>
-      <h1 className="text-3xl text-center mb-10">
-        Hello Aneroodh!
-      </h1>
-      <div className="px-[20%] m-4 flex flex-col items-center">
+    <div className={`min-h-screen w-full ${mode ? "light" : "dark"}`}>
+      {/* Blurred Background Effect */}
+      <div className={`z-10 ${selectedNote ? "blur-md" : ""}`}>
+        {/* Header */}
+        <div className="flex justify-center py-5">
+          <img src={Logo} alt="KeeperApp logo" />
+        </div>
+        <h1 className="text-3xl text-center mb-10">Hello Aneroodh!</h1>
+
+        {/* Note Input Section */}
+        <div className="px-[20%] m-4 flex flex-col items-center">
           <input
             type="text"
             className="mb-4 w-full max-w-md p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -56,28 +64,61 @@ function App() {
           >
             Add Note
           </button>
-        </div>   
+        </div>
 
-        {/* Notes List */} 
-        <div className=" max-w-[75%] mx-auto p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Notes List */}
+        <div className="max-w-[75%] mx-auto p-4 columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4">
           {notes.map((note) => (
-            <div key={note.id} className="bg-yellow-200 p-4 rounded-md shadow-md relative">
-              <h2 className=" text-black font-semibold break-words">{note.title}</h2>
+            <div
+              key={note.id}
+              className="bg-yellow-200 p-4 my-4 rounded-md shadow-md relative break-inside-avoid cursor-pointer transition-transform hover:scale-105"
+              onClick={() => setSelectedNote(note)} // Set selected note on click
+            >
+              <h2 className="text-black font-semibold break-words">{note.title}</h2>
               <p className="text-gray-700 w-full break-words whitespace-pre-wrap">{note.content}</p>
-              
+
               {/* Delete Button */}
               <button
                 className="absolute top-2 right-2 text-red-700 hover:text-white hover:bg-red-700 transition duration-300 font-semibold w-6 h-6 flex items-center justify-center rounded-md"
-                onClick={() => handleDeleteNote(note.id)}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent triggering zoom when clicking delete
+                  handleDeleteNote(note.id);
+                }}
               >
                 X
               </button>
             </div>
           ))}
         </div>
+      </div>
 
-      </>
-  )
+      {/* Zoomed Note Popup */}
+      {selectedNote && (
+        <div className="fixed inset-0 flex justify-center items-center z-50">
+          <div className="bg-yellow-200 p-6 rounded-lg shadow-lg max-w-lg w-full transform scale-105 max-h-[80vh] overflow-y-auto relative">
+            <h2 className="text-2xl font-bold text-black mb-4">{selectedNote.title}</h2>
+            <p className="text-gray-700 whitespace-pre-wrap">{selectedNote.content}</p>
+
+            {/* Close Button */}
+            <button
+              className="absolute top-2 right-2 text-gray-600 hover:text-black transition"
+              onClick={() => setSelectedNote(null)}
+            >
+              ✖
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Dark Mode Toggle Button */}
+      <button
+        className="absolute top-2 right-2 font-semibold text-[#eb7979] active:bg-gray-600"
+        onClick={change}
+      >
+        {mode ? "Light" : "Dark"}
+      </button>
+    </div>
+  );
 }
 
-export default App
+export default App;
