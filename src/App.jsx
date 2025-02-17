@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import Logo from "./assets/KeeperApp.svg";
 import "./styles.css";
 
@@ -13,26 +14,37 @@ function App() {
     setMode(!mode);
   };
 
+  // Fetch notes from backend
+  useEffect( ()=>{
+    axios.get("http://localhost:5000/loadData")
+      .then((response) => setNotes(response.data))
+      .catch((error) => console.error(error));
+  }, []);
+
   // Add a new note
   const handleAddNote = () => {
     if (!title.trim() || !content.trim()) return;
-
-    const newNote = {
-      id: Date.now(),
-      title,
-      content,
-    };
-
-    setNotes([...notes, newNote]);
-    setTitle("");
-    setContent("");
+  
+    axios.post("http://localhost:5000/addNote", { 
+      user: "aneroodh14", // or dynamically from logged-in user
+      title, 
+      content 
+    })
+    .then((response) => {
+      setNotes(prevNotes => [...prevNotes, response.data.note]);
+      setTitle("");
+      setContent("");
+    })
+    .catch((error) => console.error(error));
   };
-
+  
   // Delete a note
   const handleDeleteNote = (id) => {
-    setNotes(notes.filter((note) => note.id !== id));
+    axios.delete(`http://localhost:5000/deleteNote/${id}`)
+      .then(() => setNotes(notes.filter((note) => note._id !== id)))
+      .catch((error) => console.error(error));
   };
-
+  
   return (
     <div className={`min-h-screen w-full ${mode ? "light" : "dark"}`}>
       {/* Blurred Background Effect */}
@@ -67,7 +79,7 @@ function App() {
         </div>
 
         {/* Notes List */}
-        <div className="max-w-[75%] mx-auto p-4 columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4">
+        <div className="max-w-[75%] mx-auto p-4 columns-1 sm:columns-1 md:columns-2 lg:columns-3 gap-4">
           {notes.map((note) => (
             <div
               key={note.id}
@@ -82,7 +94,7 @@ function App() {
                 className="absolute top-2 right-2 text-red-700 hover:text-white hover:bg-red-700 transition duration-300 font-semibold w-6 h-6 flex items-center justify-center rounded-md"
                 onClick={(e) => {
                   e.stopPropagation(); // Prevent triggering zoom when clicking delete
-                  handleDeleteNote(note.id);
+                  handleDeleteNote(note._id);
                 }}
               >
                 X
