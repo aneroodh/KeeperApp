@@ -16,7 +16,7 @@ function App() {
 
   // Fetch notes from backend
   useEffect( ()=>{
-    axios.get("http://localhost:5000/loadData")
+    axios.get("https://keeper-app-backend-pink.vercel.app/loadData")
       .then((response) => setNotes(response.data))
       .catch((error) => console.error(error));
   }, []);
@@ -25,7 +25,7 @@ function App() {
   const handleAddNote = () => {
     if (!title.trim() || !content.trim()) return;
   
-    axios.post("http://localhost:5000/addNote", { 
+    axios.post("https://keeper-app-backend-pink.vercel.app/addNote", { 
       user: "aneroodh14", // or dynamically from logged-in user
       title, 
       content 
@@ -40,7 +40,7 @@ function App() {
   
   // Delete a note
   const handleDeleteNote = (id) => {
-    axios.delete(`http://localhost:5000/deleteNote/${id}`)
+    axios.delete(`https://keeper-app-backend-pink.vercel.app/deleteNote/${id}`)
       .then(() => setNotes(notes.filter((note) => note._id !== id)))
       .catch((error) => console.error(error));
   };
