@@ -4,50 +4,99 @@ import Logo from "./assets/KeeperApp.svg";
 import "./styles.css";
 
 function App() {
+  const [newNote, setNewNote] = useState("hidden");
+  const [showNewNoteButton, setShowNewNoteButton] = useState(true);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [notes, setNotes] = useState([]);
   const [mode, setMode] = useState(false);
-  const [selectedNote, setSelectedNote] = useState(null); // Track selected note
+  const [selectedNote, setSelectedNote] = useState(null);
+  const [editingNote, setEditingNote] = useState(null); // Track note being edited
 
-  const change = () => {
+  const button1 = () => {
     setMode(!mode);
   };
 
-  // Fetch notes from backend
-  useEffect( ()=>{
-    axios.get("https://keeper-app-backend-pink.vercel.app/loadData")
-      .then((response) => setNotes(response.data))
+  const button2 = () => {
+    setNewNote(newNote === "" ? "hidden" : "");
+    setShowNewNoteButton(false);
+    setEditingNote(null); // Reset editing state
+    setTitle(""); 
+    setContent(""); 
+  };
+
+  useEffect(() => {
+    axios
+      .get("https://keeper-app-backend-pink.vercel.app/loadData")
+      .then((response) => {
+        console.log("Fetched Notes:", response.data);
+        setNotes(response.data);
+      })
       .catch((error) => console.error(error));
   }, []);
 
-  // Add a new note
-  const handleAddNote = () => {
+  // Handle adding or updating a note
+  const handleSaveNote = () => {
     if (!title.trim() || !content.trim()) return;
-  
-    axios.post("https://keeper-app-backend-pink.vercel.app/addNote", { 
-      user: "aneroodh14", // or dynamically from logged-in user
-      title, 
-      content 
-    })
-    .then((response) => {
-      setNotes(prevNotes => [...prevNotes, response.data.note]);
-      setTitle("");
-      setContent("");
-    })
-    .catch((error) => console.error(error));
+
+    if (editingNote) {
+      // Update existing note
+      axios
+        .put(`https://keeper-app-backend-pink.vercel.app/updateNote/${editingNote._id}`, {
+          title,
+          content,
+        })
+        .then((response) => {
+          console.log("Note Updated:", response.data);
+          setNotes(
+            notes.map((note) =>
+              note._id === editingNote._id ? { ...note, title, content } : note
+            )
+          );
+          resetForm();
+        })
+        .catch((error) => console.error(error));
+    } else {
+      // Add new note
+      axios
+        .post("https://keeper-app-backend-pink.vercel.app/addNote", {
+          user: "aneroodh14",
+          title,
+          content,
+        })
+        .then((response) => {
+          console.log("Note Added:", response.data);
+          setNotes([...notes, response.data.note || response.data]);
+          resetForm();
+        })
+        .catch((error) => console.error(error));
+    }
   };
-  
-  // Delete a note
+
+  // Handle deleting a note
   const handleDeleteNote = (id) => {
-    axios.delete(`https://keeper-app-backend-pink.vercel.app/deleteNote/${id}`)
-      .then(() => setNotes(notes.filter((note) => note._id !== id)))
+    axios
+      .delete(`https://keeper-app-backend-pink.vercel.app/deleteNote/${id}`)
+      .then(() => {
+        console.log("Note Deleted");
+        setNotes(notes.filter((note) => note._id !== id));
+      })
       .catch((error) => console.error(error));
   };
-  
+
+  // Reset form after saving
+  const resetForm = () => {
+    setTitle("");
+    setContent("");
+    setEditingNote(null);
+    setTimeout(() => {
+      setNewNote("hidden");
+      setShowNewNoteButton(true);
+    }, 300);
+  };
+
   return (
     <div className={`min-h-screen w-full ${mode ? "light" : "dark"}`}>
-      {/* Blurred Background Effect */}
       <div className={`z-10 ${selectedNote ? "blur-md" : ""}`}>
         {/* Header */}
         <div className="flex justify-center py-5">
@@ -55,45 +104,73 @@ function App() {
         </div>
         <h1 className="text-3xl text-center mb-10">Hello Aneroodh!</h1>
 
-        {/* Note Input Section */}
-        <div className="px-[20%] m-4 flex flex-col items-center">
-          <input
-            type="text"
-            className="mb-4 w-full max-w-md p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <textarea
-            className="w-full p-2 border rounded-md mb-2 min-h-[10rem] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter your notes here..."
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-          />
-          <button
-            className="self-center w-[50%] bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition duration-300"
-            onClick={handleAddNote}
-          >
-            Add Note
-          </button>
+        <div className="flex justify-center mb-6">
+          {showNewNoteButton && (
+            <button
+              className="self-center bg-blue-500 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-600 transition duration-300"
+              onClick={button2}
+            >
+              + New Note
+            </button>
+          )}
+        </div>
+
+        {/* Note Input Form */}
+        <div className={`note-form ${newNote}`}>
+          <div className="px-[20%] m-4 flex flex-col items-center">
+            <input
+              type="text"
+              className="mb-4 w-full max-w-md p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+            <textarea
+              className="w-full p-2 border rounded-md mb-2 min-h-[10rem] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter your notes here..."
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+            />
+            <button
+              className="self-center w-[50%] bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition duration-300"
+              onClick={handleSaveNote}
+            >
+              {editingNote ? "Save Changes" : "Add Note"}
+            </button>
+          </div>
         </div>
 
         {/* Notes List */}
         <div className="max-w-[75%] mx-auto p-4 columns-1 sm:columns-1 md:columns-2 lg:columns-3 gap-4">
           {notes.map((note) => (
             <div
-              key={note.id}
+              key={note._id}
               className="bg-yellow-200 p-4 my-4 rounded-md shadow-md relative break-inside-avoid cursor-pointer transition-transform hover:scale-105"
-              onClick={() => setSelectedNote(note)} // Set selected note on click
+              onClick={() => setSelectedNote(note)}
             >
               <h2 className="text-black font-semibold break-words">{note.title}</h2>
               <p className="text-gray-700 w-full break-words whitespace-pre-wrap">{note.content}</p>
+
+              {/* Edit Button */}
+              <button
+                className="absolute bottom-2 right-10 bg-green-500 text-white px-2 py-1 rounded-md text-sm hover:bg-green-600 transition"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditingNote(note);
+                  setTitle(note.title);
+                  setContent(note.content);
+                  setNewNote("");
+                  setShowNewNoteButton(false);
+                }}
+              >
+                Edit
+              </button>
 
               {/* Delete Button */}
               <button
                 className="absolute top-2 right-2 text-red-700 hover:text-white hover:bg-red-700 transition duration-300 font-semibold w-6 h-6 flex items-center justify-center rounded-md"
                 onClick={(e) => {
-                  e.stopPropagation(); // Prevent triggering zoom when clicking delete
+                  e.stopPropagation();
                   handleDeleteNote(note._id);
                 }}
               >
@@ -110,8 +187,6 @@ function App() {
           <div className="bg-yellow-200 p-6 rounded-lg shadow-lg max-w-lg w-full transform scale-105 max-h-[80vh] overflow-y-auto relative">
             <h2 className="text-2xl font-bold text-black mb-4">{selectedNote.title}</h2>
             <p className="text-gray-700 whitespace-pre-wrap">{selectedNote.content}</p>
-
-            {/* Close Button */}
             <button
               className="absolute top-2 right-2 text-gray-600 hover:text-black transition"
               onClick={() => setSelectedNote(null)}
@@ -124,8 +199,8 @@ function App() {
 
       {/* Dark Mode Toggle Button */}
       <button
-        className="absolute top-2 right-2 font-semibold text-[#eb7979] active:bg-gray-600"
-        onClick={change}
+        className="absolute top-2 right-2 font-semibold bg-[#eb7979] active:bg-gray-600"
+        onClick={button1}
       >
         {mode ? "Light" : "Dark"}
       </button>
