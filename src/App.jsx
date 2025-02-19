@@ -51,19 +51,20 @@ export default function App() {
 
     if (editingNote) {
       // Update existing note
-      axios
-        .put(`https://keeper-app-backend-pink.vercel.app/updateNote/${editingNote._id}`, {
-          title,
-          content,
-        })
-        // .then((response) => {
-          // console.log("Note Updated:", response.data);
-          setNotes((prevNotes) =>
-            prevNotes.map((note) => note._id === editingNote._id ? {"_id": editingNote._id,"title": title, "content": content} : note)
-          );
-          resetForm();
-        // })
-        // .catch((error) => console.error(error));
+      const id = editingNote._id;
+        axios
+          .put("https://keeper-app-backend-pink.vercel.app/updateNote", {
+            id,
+            title,
+            content,
+          })
+          .then((response) => {
+            console.log("Note Updated:", response.data);
+            setNotes(notes.map(note => (note._id === id ? response.data.note : note)));
+          })
+          .catch((error) => console.error(error));
+
+      
     } else {
       // Add new note
       axios
@@ -106,24 +107,40 @@ export default function App() {
   return (
     <header>
       <SignedOut>
-        <SignInButton />
+        <div className="min-h-screen flex flex-col items-center justify-center bg-[#121212]">
+          <div className="bg-yellow-200 p-8 rounded-lg shadow-lg text-center">
+            <div className="flex justify-center pt-3 pb-5">
+              <img src={Logo} alt="KeeperApp logo" />
+            </div>
+            <h1 className="text-2xl font-semibold text-gray-700 mb-2">Welcome to KeeperApp</h1>
+            <p className="text-gray-500 mb-6">Sign in to manage your notes securely.</p>
+            
+            {/* Sign-In Button */}
+            <SignInButton mode="modal">
+              <button className="bg-blue-500 text-white px-6 py-2 rounded-md text-lg font-medium hover:bg-blue-600 transition">
+                Sign In
+              </button>
+            </SignInButton>
+          </div>
+        </div>
       </SignedOut>
       <SignedIn >
         <div className={`min-h-screen w-full ${mode ? "light" : "dark"}`}>
-          <div className="absolute top-4 left-4 scale-130 ">
-            <UserButton />
-          </div>
-          {/* Dark Mode Toggle Button */}
-          <button
-            className="px-[5px] absolute top-4 right-4 font-semibold bg-[#eb7979] active:bg-gray-600"
-            onClick={button1}
-          >
-            {mode ? "Light" : "Dark"}
-          </button>
-
           <div className={`z-10 ${selectedNote ? "blur-md" : ""}`}>
+            <div className="w-full h-11 bg-gray-600">
+              <div className=" absolute top-[1.25%] left-[1%] scale-140 ">
+                <UserButton />
+              </div>
+              {/* Dark Mode Toggle Button */}
+              <button
+                className="px-[5px] absolute top-[1.25%] right-[1%] font-semibold bg-[#eb7979] active:bg-gray-600"
+                onClick={button1}
+              >
+                {mode ? "Light" : "Dark"}
+              </button>
+            </div>
             {/* Header */}
-            <div className="flex justify-center py-5">
+            <div className="flex justify-center px-4 py-5">
               <img src={Logo} alt="KeeperApp logo" />
             </div>
             <h1 className="text-3xl text-center mb-10">Hello {isLoaded && isSignedIn ? user.firstName : "Guest"}!</h1>
@@ -165,19 +182,19 @@ export default function App() {
             </div>
 
             {/* Notes List */}
-            <div className="max-w-[75%] mx-auto p-4 columns-1 sm:columns-1 md:columns-2 lg:columns-3 gap-4">
+            <div className="max-w-[80%] mx-auto p-4 columns-1 sm:columns-1 md:columns-2 lg:columns-3 gap-4">
               {notes.map((note) => (
                 <div
                   key={note._id}
                   className="bg-yellow-200 p-4 my-4 rounded-md shadow-md relative break-inside-avoid cursor-pointer transition-transform hover:scale-105"
                   onClick={() => setSelectedNote(note)}
                 >
-                  <h2 className="text-black font-semibold break-words">{note.title}</h2>
+                  <h2 className="mt-0.5 text-black font-semibold break-words">{note.title}</h2>
                   <p className="text-gray-700 w-full break-words whitespace-pre-wrap">{note.content}</p>
 
                   {/* Edit Button */}
                   <button
-                    className="absolute bottom-2 right-10 bg-green-500 text-white px-2 py-1 rounded-md text-sm hover:bg-green-600 transition"
+                    className="absolute top-1 right-8 px-2 rounded-md hover:bg-green-600 transition"
                     onClick={(e) => {
                       e.stopPropagation();
                       setEditingNote(note);
@@ -187,12 +204,12 @@ export default function App() {
                       setShowNewNoteButton(false);
                     }}
                   >
-                    Edit
+                    ✏️
                   </button>
 
                   {/* Delete Button */}
                   <button
-                    className="absolute top-2 right-2 text-red-700 hover:text-white hover:bg-red-700 transition duration-300 font-semibold w-6 h-6 flex items-center justify-center rounded-md"
+                    className="absolute top-1 right-2 font-bold w-6 h-6 flex items-center justify-center text-red-700 rounded-md hover:text-white hover:bg-red-700 transition duration-300"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDeleteNote(note._id);
