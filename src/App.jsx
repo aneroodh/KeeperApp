@@ -51,20 +51,19 @@ export default function App() {
 
     if (editingNote) {
       // Update existing note
-      const id = editingNote._id;
-        axios
-          .put("https://keeper-app-backend-pink.vercel.app/updateNote", {
-            id,
-            title,
-            content,
-          })
-          .then((response) => {
-            console.log("Note Updated:", response.data);
-            setNotes(notes.map(note => (note._id === id ? response.data.note : note)));
-          })
-          .catch((error) => console.error(error));
-
-      
+      axios
+        .put(`https://keeper-app-backend-pink.vercel.app/updateNote/${editingNote._id}`, {
+          title,
+          content,
+        })
+        // .then((response) => {
+          // console.log("Note Updated:", response.data);
+          setNotes((prevNotes) =>
+            prevNotes.map((note) => note._id === editingNote._id ? {"_id": editingNote._id,"title": title, "content": content} : note)
+          );
+          resetForm();
+        // })
+        // .catch((error) => console.error(error));
     } else {
       // Add new note
       axios
